@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import fields
 
 try:
-    from posts.models import Comment
+    from posts.models import Comments
 except ImportError:
     assert False, 'Не найдена модель Comment'
 
@@ -33,7 +33,7 @@ def search_refind(execution, user_code):
 class TestComment:
 
     def test_comment_model(self):
-        model_fields = Comment._meta.fields
+        model_fields = Comments._meta.fields
         text_field = search_field(model_fields, 'text')
         assert text_field is not None, 'Добавьте название события `text` модели `Comment`'
         assert type(text_field) == fields.TextField, \
@@ -94,7 +94,7 @@ class TestComment:
 
         assert response.status_code in (301, 302), \
             'Проверьте, что со страницы `/<username>/<post_id>/comment/` после создания комментария перенаправляете на страницу поста'
-        comment = Comment.objects.filter(text=text, post=post, author=post.author).first()
+        comment = Comments.objects.filter(text=text, post=post, author=post.author).first()
         assert comment is not None, \
             'Проверьте, что вы создаёте новый комментарий `/<username>/<post_id>/comment/`'
         assert response.url.startswith(f'/{post.author.username}/{post.id}'), \

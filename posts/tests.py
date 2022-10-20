@@ -2,7 +2,7 @@ from http import client
 from socket import fromfd
 from urllib import response
 
-
+from django.core.cache import cache
 from django.test import Client
 from django.test import TestCase
 from .models import Post, User, Group
@@ -34,9 +34,9 @@ class ProfileTest(TestCase):
         self.assertEqual(response.status_code, 200)
         # проверяем, что объект пользователя, переданный в шаблон,
         # соответствует пользователю, которого мы создали
-        self.assertIsInstance(response.context["current_user"], User)
+        self.assertIsInstance(response.context["profile_user"], User)
         self.assertEqual(
-            response.context["current_user"].username,
+            response.context["profile_user"].username,
             self.username
         )
 
@@ -45,7 +45,8 @@ class ProfileTest(TestCase):
         response = self.client.get(reverse('new_post'))
         # Код 302 показывает, что происходит редирект
         self.assertEqual(response.status_code, 302)
-        # Находим адрес старници после редиректа (Также про универсальная проверка на незарегистрированного пользователя)
+        # Находим адрес старниц после редиректа(Также универсальная проверка на
+        # незарегистрированного пользователя)
         self.assertTrue(response.url.startswith('/auth/login/'))
 
     # Авторизованный пользователь может опубликовать пост (new)
@@ -95,7 +96,6 @@ class ProfileTest(TestCase):
 
 
 class ImageTests(TestCase):
-    
     def setUp(self) -> None:
         self.auth_client = Client()
         self.username = 'test_user'
@@ -113,7 +113,7 @@ class ImageTests(TestCase):
         self.test_description = 'test description'
         self.group = Group.objects.create(title=self.test_title_group, slug=self.test_slug, description=self.test_description)
         with open('posts/1.jpg','rb') as img:
-           self.auth_client.post(reverse('new_post'), data={'text': self.test_text,'group': self.group.id,  'image': img}, follow=True)
+            self.auth_client.post(reverse('new_post'), data={'text': self.test_text,'group': self.group.id,  'image': img}, follow=True)
            
         self.urls=(     
             reverse('index'),
@@ -149,10 +149,28 @@ class ImageTests(TestCase):
             self.assertEqual(response.status_code,200)
             self.assertNotContains(response, '<img')
             
-        
 
-        
-            
-        
-        
-        
+class CashTest(TestCase):
+    def setUp(self):
+        self.auth_client = Client()
+        self.username = 'test_user'
+        self.email = 'user@test.com'
+        self.password = '123'
+
+        self.user = User.objects.create(username=self.username, email=self.email)
+        self.user.set_password(self.password)
+        self.user.save()
+        self.auth_client.login(username=self.username, password=self.password)
+
+    def test_cash(self):
+        test_text = 'test test test'
+        test_text2 = 'change change change'
+        self.auth_client.post(reverse('new_post'), data={'text': test_text})
+        response = self.auth_client.get('/')
+        # на странице отображается тестовый пост
+        self.assertContains(response, test_text)
+        self.auth_client.post(reverse('new_post'), data={'text': test_text2})
+        self.assertNotContains(response, test_text2)
+        cache.clear()
+        response = self.auth_client.get('/')
+        self.assertContains(response, test_text2)
