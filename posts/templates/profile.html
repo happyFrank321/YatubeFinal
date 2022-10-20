@@ -1,18 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Профиль пользователя {{current_user.username}}{% endblock %}
+{% block title %}Профиль пользователя {{profile_user.username}}{% endblock %}
 {# загружаем фильтр #}
 {% load user_filters %}
 {% block content %}
+{% load thumbnail %}
 <main role="main" class="container">
     <div class="row">
             <div class="col-md-3 mb-3 mt-1">
                     <div class="card">
                             <div class="card-body">
                                     <div class="h2">
-                                        {{current_user.get_full_name}}
+                                        {{profile_user.get_full_name}}
                                     </div>
                                     <div class="h3 text-muted">
-                                         @{{current_user.username}}
+                                         @{{profile_user.username}}
                                     </div>
                             </div>
                             <ul class="list-group list-group-flush">
@@ -24,7 +25,7 @@
                                     </li>
                                     <li class="list-group-item">
                                             <div class="h6 text-muted">
-                                                Записей: {{total}}
+                                                Записей: {{profile_user.posts.count}}
                                             </div>
                                     </li>
                             </ul>
@@ -37,16 +38,20 @@
                             <div class="card-body">
                                     <p class="card-text">
                                             <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
-                                            <a href="/{{current_user.username}}/"><strong class="d-block text-gray-dark">@{{current_user.username}}</strong></a>
+                                            <a href="/{{profile_user.username}}/"><strong class="d-block text-gray-dark">@{{profile_user.username}}</strong></a>
+
+                                            {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+                                                <p><img class="card-img" src="{{ im.url }}"></p>
+                                            {% endthumbnail %}
                                             {{post.text}}
                                             
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
                                             <div class="btn-group ">
                                                     <!-- Ссылка на страницу записи в атрибуте href-->
-                                                    <a class="btn btn-sm text-muted" href="/{{current_user.username}}/{{post.pk}}" role="button">Добавить комментарий</a>
-                                                    {% if current_user.username == user.username %}
-                                                    <a class="btn btn-sm text-muted" href="/{{current_user.username}}/{{post.pk}}/edit" role="button">Редактировать</a>
+                                                    <a class="btn btn-sm text-muted" href="/{{profile_user.username}}/{{post.pk}}" role="button">Посмотреть комментарии({{post.comments.count}})</a>
+                                                    {% if profile_user.username == user.username %}
+                                                    <a class="btn btn-sm text-muted" href="/{{profile_user.username}}/{{post.pk}}/edit" role="button">Редактировать</a>
                                                     {% endif %}
                                             </div>
                                             <!-- Дата публикации  -->

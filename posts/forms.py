@@ -1,13 +1,18 @@
-from .models import Post
+from django import forms
+from .models import Post, Comments
 from django.forms import ModelForm
-from django.views.generic import UpdateView
+
 
 class CreatePost(ModelForm):
     class Meta:
         model = Post
-        fields = ['text', 'group']
-        
-class UpdatePost(UpdateView):
+        fields = ['text', 'group', 'image']
+
+
+class CreateComment(ModelForm):
+    text = forms.CharField(widget=forms.Textarea)
+
     class Meta:
-        model = Post
-        fields = ['text', 'group']
+        model = Comments
+        fields = ['text']
+        

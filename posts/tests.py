@@ -5,9 +5,10 @@ from urllib import response
 
 from django.test import Client
 from django.test import TestCase
-from .models import Post, User
+from .models import Post, User, Group
 from django.urls import reverse
 
+# проверяют, что срабатывает защита от загрузки файлов не-графических форматов
 
 class ProfileTest(TestCase):
     def setUp(self) -> None:
@@ -18,8 +19,7 @@ class ProfileTest(TestCase):
         self.email = 'user@test.com'
         self.password = '123'
 
-        self.user = User.objects.create(
-            username=self.username, email=self.email)
+        self.user = User.objects.create(username=self.username, email=self.email)
         self.user.set_password(self.password)
         self.user.save()
         self.auth_client.login(username=self.username, password=self.password)
@@ -92,3 +92,67 @@ class ProfileTest(TestCase):
             response = self.auth_client.get(element)
             # на странице отображается тестовый пост
             self.assertContains(response, test_text2)
+
+
+class ImageTests(TestCase):
+    
+    def setUp(self) -> None:
+        self.auth_client = Client()
+        self.username = 'test_user'
+        self.email = 'user@test.com'
+        self.password = '123'
+
+        self.user = User.objects.create(username=self.username, email=self.email)
+        self.user.set_password(self.password)
+        self.user.save()
+        self.auth_client.login(username=self.username, password=self.password)
+        
+        self.test_text = 'test test test'
+        self.test_slug = 'test1'
+        self.test_title_group = 'test group'
+        self.test_description = 'test description'
+        self.group = Group.objects.create(title=self.test_title_group, slug=self.test_slug, description=self.test_description)
+        with open('posts/1.jpg','rb') as img:
+           self.auth_client.post(reverse('new_post'), data={'text': self.test_text,'group': self.group.id,  'image': img}, follow=True)
+           
+        self.urls=(     
+            reverse('index'),
+            reverse('profile', kwargs={'username': self.username}),
+            reverse('group', kwargs={'slug':self.test_slug})
+        )
+        
+    # проверяют страницу конкретной записи с картинкой: на странице есть тег <img>
+    def test_post_view_has_img(self):
+        response = self.auth_client.get(reverse('group', kwargs={'slug':self.test_slug}))
+        self.assertEqual(response.status_code,200)
+        response = self.auth_client.get(
+        reverse("post", kwargs={"username": self.username, 'post_id': Post.objects.get(pk=1).id}))
+        self.assertEqual(response.status_code,200)
+        self.assertContains(response, '<img')
+        
+    # проверяют, что на главной странице, на странице профайла и на странице группы пост с картинкой отображается корректно, с тегом <img>
+    def test_img_on_all_views(self):
+
+        for element in self.urls:
+            response = self.auth_client.get(element)
+            self.assertEqual(response.status_code,200)
+            self.assertContains(response, '<img')
+             
+    # проверяют, что срабатывает защита от загрузки файлов не-графических форматов
+    def test_img_wrong_format(self):
+        Post.objects.all().delete()
+        with open('posts/test_text.txt','rb') as img:
+           self.auth_client.post(reverse('new_post'), data={'text': self.test_text,'group': self.group.id,  'image': img}, follow=True)
+
+        for element in self.urls:
+            response = self.auth_client.get(element)
+            self.assertEqual(response.status_code,200)
+            self.assertNotContains(response, '<img')
+            
+        
+
+        
+            
+        
+        
+        
