@@ -106,7 +106,7 @@ class ImageTests(TestCase):
         self.user.set_password(self.password)
         self.user.save()
         self.auth_client.login(username=self.username, password=self.password)
-        
+
         self.test_text = 'test test test'
         self.test_slug = 'test1'
         self.test_title_group = 'test group'
@@ -114,13 +114,13 @@ class ImageTests(TestCase):
         self.group = Group.objects.create(title=self.test_title_group, slug=self.test_slug, description=self.test_description)
         with open('posts/1.jpg','rb') as img:
             self.auth_client.post(reverse('new_post'), data={'text': self.test_text,'group': self.group.id,  'image': img}, follow=True)
-           
-        self.urls=(     
+
+        self.urls=(
             reverse('index'),
             reverse('profile', kwargs={'username': self.username}),
             reverse('group', kwargs={'slug':self.test_slug})
         )
-        
+
     # проверяют страницу конкретной записи с картинкой: на странице есть тег <img>
     def test_post_view_has_img(self):
         response = self.auth_client.get(reverse('group', kwargs={'slug':self.test_slug}))
@@ -129,7 +129,7 @@ class ImageTests(TestCase):
         reverse("post", kwargs={"username": self.username, 'post_id': Post.objects.get(pk=1).id}))
         self.assertEqual(response.status_code,200)
         self.assertContains(response, '<img')
-        
+
     # проверяют, что на главной странице, на странице профайла и на странице группы пост с картинкой отображается корректно, с тегом <img>
     def test_img_on_all_views(self):
 
@@ -137,7 +137,7 @@ class ImageTests(TestCase):
             response = self.auth_client.get(element)
             self.assertEqual(response.status_code,200)
             self.assertContains(response, '<img')
-             
+
     # проверяют, что срабатывает защита от загрузки файлов не-графических форматов
     def test_img_wrong_format(self):
         Post.objects.all().delete()
@@ -148,7 +148,7 @@ class ImageTests(TestCase):
             response = self.auth_client.get(element)
             self.assertEqual(response.status_code,200)
             self.assertNotContains(response, '<img')
-            
+
 
 class CashTest(TestCase):
     def setUp(self):

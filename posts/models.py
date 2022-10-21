@@ -10,30 +10,26 @@ class Post(models.Model):
     text = models.TextField(
         help_text="Текст поста(расскажите что-нибудь интересное)"
         )
-    
     pub_date = models.DateTimeField(
-        "date published", 
+        "date published",
         auto_now_add=True
         )
-    
     author = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name="posts"
         )
-    
     group = models.ForeignKey(
-        Group, 
+        Group,
         on_delete=models.SET_NULL,
         related_name="posts",
         blank=True,
         null=True,
         help_text='Группа(необязательное поле)'
         )
-
     image = models.ImageField(
-        upload_to='posts/', 
-        blank=True, 
+        upload_to='posts/',
+        blank=True,
         null=True
         )
      
@@ -52,3 +48,8 @@ class Comments(models.Model):
     
     class Meta:
         ordering = ['-created']
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")

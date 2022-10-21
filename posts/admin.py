@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Comments
+from .models import Post, Comments, Follow
 # Register your models here.
 
 
@@ -15,5 +15,11 @@ class CommentsAdmin(admin.ModelAdmin):
     list_filter = ("created",)
     empty_value_display = "-пусто-"
 
+
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ("user", "author")
+
+
+admin.site.register(Follow, FollowAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comments, CommentsAdmin)
